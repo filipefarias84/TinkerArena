@@ -2,29 +2,67 @@
 extends Resource
 class_name RobotData
 
-enum Type { COBRE }  # Apenas Cobre para MVP
+enum Type { 
+	COBRE_LIGHTNING,
+	COBRE_GUARDIAN,
+	COBRE_SWIFT,
+	FERRO_LIGHTNING,
+	FERRO_GUARDIAN,
+	FERRO_SWIFT,
+	ALUMINIO_LIGHTNING,
+	ALUMINIO_GUARDIAN,
+	ALUMINIO_SWIFT
+}
+
 enum Rarity { COMUM }  # Apenas Comum para MVP
 
 @export var serial_number: String
-@export var type: Type = Type.COBRE
+@export var type: Type = Type.COBRE_LIGHTNING  # <- CORRIGIDO: usar novo enum
 @export var rarity: Rarity = Rarity.COMUM
 
 # Stats básicos
-@export var base_attack: int = 100
-@export var base_defense: int = 80
-@export var base_special_attack: int = 90
-@export var base_special_defense: int = 75
-@export var base_health: int = 150
-@export var base_speed: int = 60
+@export var base_attack: int = 70      # <- CORRIGIDO: valores balanceados
+@export var base_defense: int = 60
+@export var base_special_attack: int = 75
+@export var base_special_defense: int = 55
+@export var base_health: int = 120
+@export var base_speed: int = 50
 
 # Peças equipadas
 @export var equipped_arms: String = ""
-@export var equipped_core: String = ""  # Para futuro
-@export var equipped_legs: String = ""  # Para futuro
+@export var equipped_core: String = ""
+@export var equipped_legs: String = ""
 
 # Ciclos de vida
 @export var max_cycles: int = 20
 @export var remaining_cycles: int = 20
+
+func get_element_type() -> String:
+	match type:
+		Type.COBRE_LIGHTNING, Type.COBRE_GUARDIAN, Type.COBRE_SWIFT:
+			return "COBRE"
+		Type.FERRO_LIGHTNING, Type.FERRO_GUARDIAN, Type.FERRO_SWIFT:
+			return "FERRO"
+		Type.ALUMINIO_LIGHTNING, Type.ALUMINIO_GUARDIAN, Type.ALUMINIO_SWIFT:
+			return "ALUMINIO"
+		_:
+			return "COBRE"
+
+func get_model_type() -> String:
+	match type:
+		Type.COBRE_LIGHTNING, Type.FERRO_LIGHTNING, Type.ALUMINIO_LIGHTNING:
+			return "LIGHTNING"
+		Type.COBRE_GUARDIAN, Type.FERRO_GUARDIAN, Type.ALUMINIO_GUARDIAN:
+			return "GUARDIAN"
+		Type.COBRE_SWIFT, Type.FERRO_SWIFT, Type.ALUMINIO_SWIFT:
+			return "SWIFT"
+		_:
+			return "LIGHTNING"
+
+func get_model_display_name() -> String:
+	var element = get_element_type()
+	var model = get_model_type()
+	return "%s %s" % [element, model]
 
 func get_final_stats() -> Dictionary:
 	var stats = {

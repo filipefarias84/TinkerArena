@@ -1,4 +1,4 @@
-# GameManager.gd - Singleton para MVP
+# GameManager.gd - Singleton para MVP (CORRIGIDO)
 extends Node
 
 var current_player: PlayerData
@@ -27,7 +27,7 @@ func create_new_player() -> PlayerData:
 	player.level = 1
 	player.sucata = 200  # Sucata inicial
 	
-	# Criar robô inicial gratuito
+	# Criar robô inicial gratuito com stats dirigidos
 	var initial_robot = create_initial_robot()
 	data_manager.robots.append(initial_robot)
 	
@@ -36,18 +36,20 @@ func create_new_player() -> PlayerData:
 
 func create_initial_robot() -> RobotData:
 	var robot = RobotData.new()
-	robot.serial_number = "TKR-COP-S01-000001"
-	robot.type = RobotData.Type.COBRE
+	robot.serial_number = "TKR-COP-LGT-000001"  # Lightning inicial
+	robot.type = RobotData.Type.COBRE_LIGHTNING
 	robot.rarity = RobotData.Rarity.COMUM
 	
-	# Stats fixos para MVP
-	robot.base_attack = 100
-	robot.base_defense = 80
-	robot.base_special_attack = 90
-	robot.base_special_defense = 75
-	robot.base_health = 150
-	robot.base_speed = 60
+	# Stats dirigidos Lightning (balanced)
+	robot.base_attack = 80
+	robot.base_defense = 70
+	robot.base_special_attack = 85
+	robot.base_special_defense = 65
+	robot.base_health = 100
+	robot.base_speed = 75
+	
 	robot.remaining_cycles = 20
 	robot.max_cycles = 20
 	
+	print("🤖 Robô inicial criado: COBRE LIGHTNING")
 	return robot

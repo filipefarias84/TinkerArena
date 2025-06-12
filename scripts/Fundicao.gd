@@ -1,4 +1,4 @@
-# Fundicao.gd - Produção de robôs MVP
+# Fundicao.gd - Produção de robôs MVP com modelos dirigidos (SEM MODELFACTORY)
 extends Control
 
 @onready var back_btn: Button = $BackButton
@@ -39,7 +39,7 @@ func update_display():
 		var time_left = production_timer.time_left
 		status_label.text = "Produzindo robô... %.1fs restantes" % time_left
 	elif production_complete:
-		status_label.text = "Robô Cobre pronto para coleta!"
+		status_label.text = "Robô C.O.R.E. pronto para coleta!"
 	else:
 		status_label.text = "Fundição pronta. Custo: %d sucata" % PRODUCTION_COST
 
@@ -51,7 +51,7 @@ func _on_produce_pressed():
 		production_timer.start()
 		update_display()
 		
-		print("🏭 Iniciando produção de robô Cobre")
+		print("🏭 Iniciando produção de robô C.O.R.E.")
 
 func _on_production_complete():
 	is_producing = false
@@ -61,13 +61,13 @@ func _on_production_complete():
 	print("🏭 Produção completa!")
 
 func _on_collect_pressed():
-	# Criar novo robô
+	# Criar novo robô usando função interna (evitar duplicate ModelFactory)
 	var new_robot = create_robot()
 	GameManager.data_manager.robots.append(new_robot)
 	
 	# Reset produção COMPLETO
 	production_complete = false
-	is_producing = false  # <- Garantir reset total
+	is_producing = false
 	
 	# Parar timer se estiver rodando
 	if production_timer.timeout.is_connected(_on_production_complete):
@@ -81,27 +81,99 @@ func _on_collect_pressed():
 	print("🤖 Robô coletado: " + new_robot.serial_number)
 
 func create_robot() -> RobotData:
+	# Criar robô com stats dirigidos SEM usar ModelFactory
 	var robot = RobotData.new()
 	
-	# Gerar número de série simples
-	var robot_count = GameManager.data_manager.robots.size() + 1
-	robot.serial_number = "TKR-COP-S01-%06d" % robot_count
+	# Escolher modelo e elemento aleatório
+	var models = ["LIGHTNING", "GUARDIAN", "SWIFT"]
+	var elements = ["COBRE", "FERRO", "ALUMINIO"]
 	
-	robot.type = RobotData.Type.COBRE
+	var chosen_model = models.pick_random()
+	var chosen_element = elements.pick_random()
+	
+	# Gerar número de série
+	var robot_count = GameManager.data_manager.robots.size() + 1
+	var model_code = get_model_code(chosen_model)
+	var element_code = get_element_code(chosen_element)
+	robot.serial_number = "TKR-%s-%s-%06d" % [element_code, model_code, robot_count]
+	
+	# Determinar tipo enum
+	robot.type = get_robot_type(chosen_element, chosen_model)
 	robot.rarity = RobotData.Rarity.COMUM
 	
-	# Stats fixos com pequena variação (+/- 5)
-	robot.base_attack = 100 + randi_range(-5, 5)
-	robot.base_defense = 80 + randi_range(-5, 5)
-	robot.base_special_attack = 90 + randi_range(-5, 5)
-	robot.base_special_defense = 75 + randi_range(-5, 5)
-	robot.base_health = 150 + randi_range(-10, 10)
-	robot.base_speed = 60 + randi_range(-5, 5)
+	# Aplicar stats dirigidos manualmente
+	apply_model_stats(robot, chosen_model)
 	
 	robot.remaining_cycles = 20
 	robot.max_cycles = 20
 	
+	print("🏭 Robô criado: %s %s" % [chosen_element, chosen_model])
+	print("📊 Stats: ATK:%d DEF:%d HP:%d SPD:%d" % [
+		robot.base_attack, robot.base_defense, robot.base_health, robot.base_speed
+	])
+	
 	return robot
+
+func get_robot_type(element: String, model: String) -> RobotData.Type:
+	match element:
+		"COBRE":
+			match model:
+				"LIGHTNING": return RobotData.Type.COBRE_LIGHTNING
+				"GUARDIAN": return RobotData.Type.COBRE_GUARDIAN
+				"SWIFT": return RobotData.Type.COBRE_SWIFT
+		"FERRO":
+			match model:
+				"LIGHTNING": return RobotData.Type.FERRO_LIGHTNING
+				"GUARDIAN": return RobotData.Type.FERRO_GUARDIAN
+				"SWIFT": return RobotData.Type.FERRO_SWIFT
+		"ALUMINIO":
+			match model:
+				"LIGHTNING": return RobotData.Type.ALUMINIO_LIGHTNING
+				"GUARDIAN": return RobotData.Type.ALUMINIO_GUARDIAN
+				"SWIFT": return RobotData.Type.ALUMINIO_SWIFT
+	
+	return RobotData.Type.COBRE_LIGHTNING
+
+func apply_model_stats(robot: RobotData, model: String):
+	# Stats dirigidos baseados no database (multiplicador 10x)
+	match model:
+		"LIGHTNING":  # Balanced
+			robot.base_attack = randi_range(7, 10) * 10
+			robot.base_special_attack = randi_range(7, 10) * 10
+			robot.base_defense = randi_range(7, 10) * 10
+			robot.base_special_defense = randi_range(7, 10) * 10
+			robot.base_health = randi_range(8, 11) * 10
+			robot.base_speed = randi_range(7, 10) * 10
+		
+		"GUARDIAN":  # Tank
+			robot.base_attack = randi_range(5, 7) * 10
+			robot.base_special_attack = randi_range(4, 6) * 10
+			robot.base_defense = randi_range(10, 13) * 10
+			robot.base_special_defense = randi_range(9, 12) * 10
+			robot.base_health = randi_range(11, 14) * 10
+			robot.base_speed = randi_range(4, 6) * 10
+		
+		"SWIFT":  # DPS
+			robot.base_attack = randi_range(9, 12) * 10
+			robot.base_special_attack = randi_range(10, 13) * 10
+			robot.base_defense = randi_range(5, 7) * 10
+			robot.base_special_defense = randi_range(6, 8) * 10
+			robot.base_health = randi_range(6, 9) * 10
+			robot.base_speed = randi_range(11, 14) * 10
+
+func get_model_code(model: String) -> String:
+	match model:
+		"LIGHTNING": return "LGT"
+		"GUARDIAN": return "GRD"
+		"SWIFT": return "SWT"
+		_: return "LGT"
+
+func get_element_code(element: String) -> String:
+	match element:
+		"COBRE": return "COP"
+		"FERRO": return "IRO"
+		"ALUMINIO": return "ALU"
+		_: return "COP"
 
 func _on_back_pressed():
 	get_tree().change_scene_to_file("res://scenes/MainHub.tscn")

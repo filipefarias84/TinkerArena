@@ -1,11 +1,10 @@
-# Oficina.gd - Gerenciamento de robôs MVP
+# Oficina.gd - Gerenciamento de robôs MVP com modelos dirigidos
 extends Control
 
 @onready var back_btn: Button = $BackButton
 @onready var robot_list_label: Label = $RobotListLabels
 @onready var robot_details_label: Label = $RobotDetailsLabel
 @onready var robot_scroll: ScrollContainer = $RobotScrollContainer
-# Novos elementos para equipamento
 @onready var equip_btn: Button = $EquipButton
 @onready var unequip_btn: Button = $UnequipButton
 @onready var piece_selection_panel: Control = $PieceSelectionPanel
@@ -14,7 +13,6 @@ extends Control
 
 var piece_buttons: Array[Button] = []
 var selected_piece_for_equip: PieceData
-
 var robot_buttons: Array[Button] = []
 var selected_robot: RobotData
 
@@ -31,22 +29,18 @@ func connect_signals():
 	close_panel_btn.pressed.connect(_on_close_panel_pressed)
 
 func setup_robot_list():
-	# Criar VBoxContainer dentro do ScrollContainer
 	var vbox = VBoxContainer.new()
-	vbox.custom_minimum_size = Vector2(240, 0)  # Largura mínima
+	vbox.custom_minimum_size = Vector2(240, 0)
 	robot_scroll.add_child(vbox)
 
 func setup_equipment_ui():
-	# Ocultar elementos de equipamento inicialmente
 	equip_btn.visible = false
 	unequip_btn.visible = false
 	piece_selection_panel.visible = false
 
 func update_robot_list():
-	# Limpar botões existentes
 	clear_robot_buttons()
 	
-	# Obter robôs ativos
 	var active_robots = GameManager.data_manager.get_active_robots()
 	var vbox = robot_scroll.get_child(0) as VBoxContainer
 	
@@ -57,10 +51,10 @@ func update_robot_list():
 		robot_details_label.text = "Selecione um robô para ver detalhes"
 		return
 	
-	# Criar botão para cada robô
 	for robot in active_robots:
 		var button = Button.new()
-		button.text = "%s (Ciclos: %d/%d)" % [robot.serial_number, robot.remaining_cycles, robot.max_cycles]
+		# Mostrar modelo + ciclos
+		button.text = "%s (Ciclos: %d/%d)" % [robot.get_model_display_name(), robot.remaining_cycles, robot.max_cycles]
 		button.pressed.connect(_on_robot_selected.bind(robot))
 		
 		vbox.add_child(button)
@@ -85,7 +79,9 @@ func update_robot_details():
 	var equipped_piece = get_equipped_piece_details()
 	
 	var details_text = """Robô: %s
-Tipo: Cobre
+Serial: %s
+Modelo: %s
+Elemento: %s
 Ciclos: %d/%d
 
 === STATS FINAIS ===
@@ -98,7 +94,10 @@ Velocidade: %d
 
 === EQUIPAMENTO ===
 %s""" % [
+		selected_robot.get_model_display_name(),
 		selected_robot.serial_number,
+		selected_robot.get_model_type(),
+		selected_robot.get_element_type(),
 		selected_robot.remaining_cycles,
 		selected_robot.max_cycles,
 		stats.attack,
@@ -138,17 +137,13 @@ func update_equipment_buttons():
 		unequip_btn.visible = false
 		return
 	
-	# Verificar se há peças disponíveis para equipar
 	var available_pieces = get_available_pieces()
 	equip_btn.visible = not available_pieces.is_empty()
-	
-	# Verificar se há algo equipado para desequipar
 	unequip_btn.visible = selected_robot.equipped_arms != ""
 
 func get_available_pieces() -> Array:
 	var available = []
 	
-	# Verificação de segurança
 	if not GameManager or not GameManager.data_manager:
 		print("⚠️ GameManager ou DataManager não inicializados")
 		return available
@@ -164,7 +159,6 @@ func get_available_pieces() -> Array:
 	return available
 
 func is_piece_equipped(piece_id: String) -> bool:
-	# Verificação de segurança
 	if not GameManager or not GameManager.data_manager:
 		return false
 	
@@ -186,14 +180,9 @@ func _on_unequip_pressed():
 	print("🔧 Desequipando peça: " + selected_robot.equipped_arms)
 	selected_robot.equipped_arms = ""
 	
-	# Atualizar UI
 	update_robot_details()
 	update_equipment_buttons()
-	
-	# Salvar alterações
 	GameManager.data_manager.save_game()
-	
-	# Feedback visual
 	show_equipment_feedback("Peça desequipada!")
 
 func _on_close_panel_pressed():
@@ -204,10 +193,8 @@ func _on_piece_selected_for_equip(piece: PieceData):
 	equip_piece_to_robot()
 
 func show_piece_selection_panel():
-	# Limpar lista de peças anterior
 	clear_piece_buttons()
 	
-	# Obter peças disponíveis
 	var available_pieces = get_available_pieces()
 	
 	if available_pieces.is_empty():
@@ -215,7 +202,6 @@ func show_piece_selection_panel():
 		no_pieces_label.text = "Nenhuma peça disponível!\nVá ao Arsenal para criar uma."
 		piece_list.add_child(no_pieces_label)
 	else:
-		# Criar botão para cada peça disponível
 		for piece in available_pieces:
 			var button = Button.new()
 			button.text = "%s (Atq.Esp: +%d)" % [piece.id, piece.primary_stat]
@@ -235,30 +221,20 @@ func equip_piece_to_robot():
 	if not selected_robot or not selected_piece_for_equip:
 		return
 	
-	# Desequipar peça atual se houver
 	if selected_robot.equipped_arms != "":
 		print("🔧 Desequipando peça anterior: " + selected_robot.equipped_arms)
 	
-	# Equipar nova peça
 	selected_robot.equipped_arms = selected_piece_for_equip.id
 	print("🔧 Peça equipada: %s em %s" % [selected_piece_for_equip.id, selected_robot.serial_number])
 	
-	# Atualizar UI
 	piece_selection_panel.visible = false
 	update_robot_details()
 	update_equipment_buttons()
-	
-	# Salvar alterações
 	GameManager.data_manager.save_game()
-	
-	# Feedback visual
 	show_equipment_feedback("Peça equipada com sucesso!")
 
 func show_equipment_feedback(message: String):
-	# Simples feedback no console por enquanto
-	# TODO: Implementar feedback visual na UI
 	print("✅ " + message)
 
 func _on_back_pressed():
 	get_tree().change_scene_to_file("res://scenes/MainHub.tscn")
-	

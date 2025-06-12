@@ -16,7 +16,7 @@ func save_game():
 		"player": GameManager.current_player.to_dict(),
 		"robots": serialize_robots(),
 		"pieces": serialize_pieces(),
-		"save_version": "1.1"  # Versionamento para futuras migrações
+		"save_version": "1.2"  # Versionamento atualizado para modelos dirigidos
 	}
 	
 	var file = FileAccess.open(SAVE_FILE, FileAccess.WRITE)
@@ -46,6 +46,7 @@ func load_player_data() -> PlayerData:
 	var data = json.data
 	var save_version = data.get("save_version", "1.0")
 	print("📖 Carregando save versão: " + save_version)
+	
 	var player = PlayerData.new()
 	player.from_dict(data.get("player", {}))
 	
@@ -74,14 +75,14 @@ func load_robots_from_data(data: Array):
 	for robot_data in data:
 		var robot = RobotData.new()
 		robot.serial_number = robot_data.get("serial_number", "")
-		robot.type = robot_data.get("type", RobotData.Type.COBRE)
+		robot.type = robot_data.get("type", RobotData.Type.COBRE_LIGHTNING)  # Corrigido para novo enum
 		robot.rarity = robot_data.get("rarity", RobotData.Rarity.COMUM)
-		robot.base_attack = robot_data.get("base_attack", 100)
-		robot.base_defense = robot_data.get("base_defense", 80)
-		robot.base_special_attack = robot_data.get("base_special_attack", 90)
-		robot.base_special_defense = robot_data.get("base_special_defense", 75)
-		robot.base_health = robot_data.get("base_health", 150)
-		robot.base_speed = robot_data.get("base_speed", 60)
+		robot.base_attack = robot_data.get("base_attack", 70)    # Stats balanceados
+		robot.base_defense = robot_data.get("base_defense", 60)
+		robot.base_special_attack = robot_data.get("base_special_attack", 75)
+		robot.base_special_defense = robot_data.get("base_special_defense", 55)
+		robot.base_health = robot_data.get("base_health", 120)
+		robot.base_speed = robot_data.get("base_speed", 50)
 		# Equipamentos (compatibilidade com saves antigos)
 		robot.equipped_arms = robot_data.get("equipped_arms", "")
 		robot.equipped_core = robot_data.get("equipped_core", "")
