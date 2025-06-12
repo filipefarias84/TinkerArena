@@ -1,0 +1,74 @@
+[gd_scene load_steps=3 format=3 uid="uid://bh33nxl5la75u"]
+
+[ext_resource type="Script" uid="uid://xloftdml64ss" path="res://scripts/CombatScene.gd" id="1_gc2ly"]
+[ext_resource type="Script" uid="uid://du2bwatj653eq" path="res://scripts/TurnOrderUI.gd" id="2_4j82b"]
+
+[node name="CombatScene" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_gc2ly")
+
+[node name="UI" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TurnOrderBar" type="Control" parent="UI"]
+anchors_preset = 0
+offset_left = 300.0
+offset_top = 50.0
+offset_right = 1620.0
+offset_bottom = 120.0
+script = ExtResource("2_4j82b")
+
+[node name="TurnLabel" type="Label" parent="UI"]
+layout_mode = 0
+offset_left = 660.0
+offset_top = 150.0
+offset_right = 1260.0
+offset_bottom = 200.0
+text = "Turno do Jogador"
+horizontal_alignment = 1
+
+[node name="PlayerUnitLabel" type="Label" parent="UI"]
+layout_mode = 0
+offset_left = 50.0
+offset_top = 250.0
+offset_right = 450.0
+offset_bottom = 350.0
+text = "Seu Robô: 150/150 HP"
+
+[node name="EnemyUnitLabel" type="Label" parent="UI"]
+layout_mode = 0
+offset_left = 1050.0
+offset_top = 250.0
+offset_right = 1450.0
+offset_bottom = 350.0
+text = "Inimigo: 150/150 HP"
+
+[node name="AttackButton" type="Button" parent="UI"]
+layout_mode = 0
+offset_left = 710.0
+offset_top = 450.0
+offset_right = 1210.0
+offset_bottom = 510.0
+text = "Ataque Básico"
+
+[node name="SpecialButton" type="Button" parent="UI"]
+layout_mode = 0
+offset_left = 710.0
+offset_top = 530.0
+offset_right = 1210.0
+offset_bottom = 590.0
+text = "Ataque Especial"
+
+[node name="BackButton" type="Button" parent="UI"]
+layout_mode = 0
+offset_left = 710.0
+offset_top = 610.0
+offset_right = 1210.0
+offset_bottom = 650.0
+text = "Fugir"

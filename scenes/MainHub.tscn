@@ -67,6 +67,14 @@ offset_right = 1500.0
 offset_bottom = 300.0
 text = "Bancada"
 
+[node name="CombatButton" type="Button" parent="Center"]
+layout_mode = 0
+offset_left = 600.0
+offset_top = 500.0
+offset_right = 900.0
+offset_bottom = 580.0
+text = "COMBATE TESTE"
+
 [node name="Bottom" type="Control" parent="."]
 layout_mode = 1
 anchors_preset = 12
