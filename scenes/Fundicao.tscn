@@ -39,3 +39,65 @@ offset_top = 350.0
 offset_right = 850.0
 offset_bottom = 430.0
 text = "Coletar"
+
+[node name="ModelSelectionPanel" type="Panel" parent="."]
+visible = false
+layout_mode = 0
+offset_left = 200.0
+offset_top = 100.0
+offset_right = 1200.0
+offset_bottom = 600.0
+
+[node name="ModelButtons" type="VBoxContainer" parent="ModelSelectionPanel"]
+layout_mode = 0
+offset_left = 50.0
+offset_top = 50.0
+offset_right = 350.0
+offset_bottom = 300.0
+
+[node name="LightningButton" type="Button" parent="ModelSelectionPanel/ModelButtons"]
+layout_mode = 2
+text = "⚡ LIGHTNING
+(Balanced)"
+
+[node name="GuardianButton" type="Button" parent="ModelSelectionPanel/ModelButtons"]
+layout_mode = 2
+text = "🛡️ GUARDIAN
+(Tank)"
+
+[node name="SwiftButton" type="Button" parent="ModelSelectionPanel/ModelButtons"]
+layout_mode = 2
+text = "💨 SWIFT
+(DPS)"
+
+[node name="ElementSelection" type="OptionButton" parent="ModelSelectionPanel"]
+layout_mode = 0
+offset_left = 50.0
+offset_top = 320.0
+offset_right = 200.0
+offset_bottom = 350.0
+
+[node name="PreviewLabel" type="Label" parent="ModelSelectionPanel"]
+layout_mode = 0
+offset_left = 400.0
+offset_top = 50.0
+offset_right = 900.0
+offset_bottom = 400.0
+text = "Selecione modelo e elemento"
+autowrap_mode = 3
+
+[node name="ConfirmButton" type="Button" parent="ModelSelectionPanel"]
+layout_mode = 0
+offset_left = 400.0
+offset_top = 420.0
+offset_right = 550.0
+offset_bottom = 450.0
+text = "Confirmar"
+
+[node name="CancelButton" type="Button" parent="ModelSelectionPanel"]
+layout_mode = 0
+offset_left = 570.0
+offset_top = 420.0
+offset_right = 720.0
+offset_bottom = 450.0
+text = "Cancelar"

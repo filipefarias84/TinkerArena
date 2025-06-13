@@ -41,7 +41,7 @@ text = "Selecione uma peça para ver detalhes"
 [node name="EquipButton" type="Button" parent="."]
 layout_mode = 0
 offset_left = 400.0
-offset_top = 370.0
+offset_top = 450.0
 offset_right = 600.0
-offset_bottom = 420.0
+offset_bottom = 500.0
 text = "Equipar um robô"

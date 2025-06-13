@@ -33,42 +33,104 @@ offset_bottom = 200.0
 text = "Turno do Jogador"
 horizontal_alignment = 1
 
-[node name="PlayerUnitLabel" type="Label" parent="UI"]
-layout_mode = 0
+[node name="PlayerTeam" type="Control" parent="UI"]
+anchors_preset = 0
 offset_left = 50.0
 offset_top = 250.0
 offset_right = 450.0
-offset_bottom = 350.0
-text = "Seu Robô: 150/150 HP"
+offset_bottom = 450.0
 
-[node name="EnemyUnitLabel" type="Label" parent="UI"]
+[node name="FrontLabel" type="Label" parent="UI/PlayerTeam"]
 layout_mode = 0
-offset_left = 1050.0
+offset_right = 400.0
+offset_bottom = 90.0
+text = "🛡️ FRONT: Carregando..."
+autowrap_mode = 3
+
+[node name="BackLabel" type="Label" parent="UI/PlayerTeam"]
+layout_mode = 0
+offset_top = 110.0
+offset_right = 400.0
+offset_bottom = 200.0
+text = "⚔️ BACK: Carregando..."
+autowrap_mode = 3
+
+[node name="EnemyTeam" type="Control" parent="UI"]
+anchors_preset = 0
+offset_left = 1070.0
 offset_top = 250.0
-offset_right = 1450.0
-offset_bottom = 350.0
-text = "Inimigo: 150/150 HP"
+offset_right = 1470.0
+offset_bottom = 450.0
+
+[node name="FrontLabel" type="Label" parent="UI/EnemyTeam"]
+layout_mode = 0
+offset_right = 400.0
+offset_bottom = 90.0
+text = "🔥 FRONT: Inimigo"
+autowrap_mode = 3
+
+[node name="BackLabel" type="Label" parent="UI/EnemyTeam"]
+layout_mode = 0
+offset_top = 110.0
+offset_right = 400.0
+offset_bottom = 200.0
+text = "🔥 BACK: Inimigo"
+autowrap_mode = 3
 
 [node name="AttackButton" type="Button" parent="UI"]
 layout_mode = 0
-offset_left = 710.0
-offset_top = 450.0
-offset_right = 1210.0
-offset_bottom = 510.0
-text = "Ataque Básico"
+offset_left = 610.0
+offset_top = 480.0
+offset_right = 810.0
+offset_bottom = 530.0
+text = "🗡️ Ataque Básico"
 
 [node name="SpecialButton" type="Button" parent="UI"]
 layout_mode = 0
-offset_left = 710.0
-offset_top = 530.0
-offset_right = 1210.0
-offset_bottom = 590.0
-text = "Ataque Especial"
+offset_left = 830.0
+offset_top = 480.0
+offset_right = 1030.0
+offset_bottom = 530.0
+text = "⚡ Ataque Especial"
+
+[node name="SwitchButton" type="Button" parent="UI"]
+layout_mode = 0
+offset_left = 610.0
+offset_top = 550.0
+offset_right = 810.0
+offset_bottom = 600.0
+text = "🔄 Trocar Posição"
 
 [node name="BackButton" type="Button" parent="UI"]
 layout_mode = 0
-offset_left = 710.0
-offset_top = 610.0
-offset_right = 1210.0
-offset_bottom = 650.0
-text = "Fugir"
+offset_left = 830.0
+offset_top = 550.0
+offset_right = 1030.0
+offset_bottom = 600.0
+text = "🏃 Fugir"
+
+[node name="CombatLogPanel" type="Panel" parent="UI"]
+layout_mode = 0
+offset_left = 1400.0
+offset_top = 150.0
+offset_right = 1750.0
+offset_bottom = 450.0
+
+[node name="LogTitle" type="Label" parent="UI/CombatLogPanel"]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 340.0
+offset_bottom = 35.0
+text = "📜 Log de Combate"
+horizontal_alignment = 1
+
+[node name="ScrollContainer" type="ScrollContainer" parent="UI/CombatLogPanel"]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 40.0
+offset_right = 340.0
+offset_bottom = 290.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="UI/CombatLogPanel/ScrollContainer"]
+layout_mode = 2
