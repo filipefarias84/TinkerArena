@@ -1,4 +1,4 @@
-# Bancada.gd - Inventário de peças
+# Bancada.gd - Inventário de peças com raridades corrigidas
 extends Control
 
 @onready var back_btn: Button = $BackButton
@@ -41,10 +41,20 @@ func update_piece_list():
 		equip_btn.visible = false
 		return
 	
-	# Criar botão para cada peça
+	# 🆕 CRIAR BOTÃO COM RARIDADE CORRETA
 	for piece in all_pieces:
 		var button = Button.new()
-		button.text = "%s (Durabilidade: %d/%d)" % [piece.id, piece.current_durability, piece.max_durability]
+		
+		# Mostrar raridade correta + cor
+		var display_text = "%s (%s)\nDurabilidade: %d/%d" % [
+			piece.id, 
+			piece.get_rarity_name(),  # 🔧 CORREÇÃO: usar função do PieceData
+			piece.current_durability, 
+			piece.max_durability
+		]
+		
+		button.text = display_text
+		button.modulate = piece.get_rarity_color()  # 🔧 CORREÇÃO: aplicar cor
 		button.pressed.connect(_on_piece_selected.bind(piece))
 		
 		vbox.add_child(button)
@@ -67,23 +77,27 @@ func update_piece_details():
 	if not selected_piece:
 		return
 	
-	var details_text = """Peça: %s
-Tipo: Braços
-Raridade: Comum
-Durabilidade: %d/%d
+	# 🔧 CORREÇÃO: Usar raridade correta + melhor formatação
+	var details_text = """🦾 Peça: %s
+🏷️ Tipo: Braços
+✨ Raridade: %s
+🔧 Durabilidade: %d/%d
 
-=== STATS ===
-Ataque Especial: +%d (primário)
-%s: +%d
-%s: +%d
+=== 📊 STATS ===
+⚡ Ataque Especial: +%d (primário)
+%s %s: +%d
+%s %s: +%d
 
-Status: %s""" % [
+📍 Status: %s""" % [
 		selected_piece.id,
+		selected_piece.get_rarity_name(),  # 🔧 CORREÇÃO: raridade correta
 		selected_piece.current_durability,
 		selected_piece.max_durability,
 		selected_piece.primary_stat,
+		get_stat_color_indicator(selected_piece.secondary_stat_1),
 		selected_piece.secondary_stat_1_type.capitalize(),
 		selected_piece.secondary_stat_1,
+		get_stat_color_indicator(selected_piece.secondary_stat_2),
 		selected_piece.secondary_stat_2_type.capitalize(),
 		selected_piece.secondary_stat_2,
 		get_piece_status()
@@ -91,6 +105,24 @@ Status: %s""" % [
 	
 	piece_details_label.text = details_text
 	piece_details_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	
+	# 🆕 APLICAR COR DA RARIDADE
+	piece_details_label.modulate = selected_piece.get_rarity_color()
+
+# 🆕 SISTEMA DE CORES PARA STATS
+func get_stat_color_indicator(value: int) -> String:
+	if value >= 25:
+		return "🟣"  # Roxo - Excepcional
+	elif value >= 20:
+		return "🔵"  # Azul - Muito Alto
+	elif value >= 15:
+		return "🟢"  # Verde - Alto
+	elif value >= 10:
+		return "🟡"  # Amarelo - Normal
+	elif value >= 5:
+		return "🟠"  # Laranja - Baixo
+	else:
+		return "🔴"  # Vermelho - Muito Baixo
 
 func get_piece_status() -> String:
 	if not selected_piece:
@@ -104,8 +136,8 @@ func get_piece_status() -> String:
 	return "Disponível para equipar"
 
 func _on_equip_pressed():
-	print("🔧 Sistema de equipamento será implementado na Oficina")
-	# Por enquanto, apenas feedback
+	print("🔧 Vá à Oficina para equipar peças nos robôs")
+	# 🔧 CORREÇÃO: Melhor feedback
 
 func _on_back_pressed():
 	get_tree().change_scene_to_file("res://scenes/MainHub.tscn")

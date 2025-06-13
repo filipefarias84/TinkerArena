@@ -1,4 +1,4 @@
-# Oficina.gd - Gerenciamento de robôs MVP com modelos dirigidos
+# Oficina.gd - Feedback Visual Melhorado + Sistema de Raridades
 extends Control
 
 @onready var back_btn: Button = $BackButton
@@ -53,8 +53,17 @@ func update_robot_list():
 	
 	for robot in active_robots:
 		var button = Button.new()
-		# Mostrar modelo + ciclos
-		button.text = "%s (Ciclos: %d/%d)" % [robot.get_model_display_name(), robot.remaining_cycles, robot.max_cycles]
+		
+		# 🆕 VISUAL MELHORADO COM RARIDADE E CORES
+		var display_text = "%s\n%s (Ciclos: %d/%d)" % [
+			robot.get_model_display_name(),
+			robot.get_rarity_name(),
+			robot.remaining_cycles,
+			robot.max_cycles
+		]
+		
+		button.text = display_text
+		button.modulate = robot.get_rarity_color()
 		button.pressed.connect(_on_robot_selected.bind(robot))
 		
 		vbox.add_child(button)
@@ -78,39 +87,86 @@ func update_robot_details():
 	var stats = selected_robot.get_final_stats()
 	var equipped_piece = get_equipped_piece_details()
 	
-	var details_text = """Robô: %s
-Serial: %s
-Modelo: %s
-Elemento: %s
-Ciclos: %d/%d
+	# 🆕 DETALHES MELHORADOS COM CORES E RARIDADE
+	var details_text = """🤖 ROBÔ: %s
+📋 Serial: %s
+⚡ Modelo: %s
+🔧 Elemento: %s
+✨ Raridade: %s
+🔄 Ciclos: %d/%d
 
-=== STATS FINAIS ===
-Ataque: %d
-Defesa: %d
-Ataque Especial: %d
-Defesa Especial: %d
-Vida: %d
-Velocidade: %d
+=== 📊 STATS FINAIS ===
+%s
+%s
+%s
+%s
+%s
+%s
 
-=== EQUIPAMENTO ===
+=== 🎒 EQUIPAMENTO ===
+%s
+
 %s""" % [
 		selected_robot.get_model_display_name(),
 		selected_robot.serial_number,
 		selected_robot.get_model_type(),
 		selected_robot.get_element_type(),
+		selected_robot.get_rarity_name(),
 		selected_robot.remaining_cycles,
 		selected_robot.max_cycles,
-		stats.attack,
-		stats.defense,
-		stats.special_attack,
-		stats.special_defense,
-		stats.health,
-		stats.speed,
-		equipped_piece
+		format_stat_with_color("Ataque", stats.attack),
+		format_stat_with_color("Defesa", stats.defense),
+		format_stat_with_color("Ataque Especial", stats.special_attack),
+		format_stat_with_color("Defesa Especial", stats.special_defense),
+		format_stat_with_color("Vida", stats.health),
+		format_stat_with_color("Velocidade", stats.speed),
+		equipped_piece,
+		get_legendary_ability_text()
 	]
 	
 	robot_details_label.text = details_text
 	robot_details_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	
+	# 🆕 APLICAR COR DA RARIDADE AO LABEL
+	robot_details_label.modulate = selected_robot.get_rarity_color()
+
+# 🆕 SISTEMA DE CORES PARA STATS
+func format_stat_with_color(stat_name: String, value: int) -> String:
+	var color_indicator = get_stat_color_indicator(value)
+	return "%s %s: %d" % [color_indicator, stat_name, value]
+
+func get_stat_color_indicator(value: int) -> String:
+	# Sistema de cores baseado no database
+	if value >= 160:
+		return "🟣"  # Roxo - Excepcional (16-18 * 10)
+	elif value >= 130:
+		return "🔵"  # Azul - Muito Alto (13-15 * 10)
+	elif value >= 100:
+		return "🟢"  # Verde - Alto (10-12 * 10)
+	elif value >= 70:
+		return "🟡"  # Amarelo - Normal (7-9 * 10)
+	elif value >= 40:
+		return "🟠"  # Laranja - Baixo (4-6 * 10)
+	else:
+		return "🔴"  # Vermelho - Muito Baixo (1-3 * 10)
+
+func get_legendary_ability_text() -> String:
+	if selected_robot.rarity != RobotData.Rarity.LENDARIO:
+		return ""
+	
+	var ability = selected_robot.get_legendary_ability()
+	if ability.is_empty():
+		return ""
+	
+	return """
+=== 🌟 HABILIDADE LENDÁRIA ===
+🏆 %s
+📝 %s
+🎯 Chance: %.0f%%""" % [
+		ability.name,
+		ability.description,
+		ability.proc_chance * 100
+	]
 
 func get_equipped_piece_details() -> String:
 	if selected_robot.equipped_arms == "":
@@ -118,16 +174,33 @@ func get_equipped_piece_details() -> String:
 	
 	var piece = GameManager.data_manager.get_piece_by_id(selected_robot.equipped_arms)
 	if piece:
-		return "Braço: %s\n  +%d Ataque Especial\n  +%d %s\n  +%d %s\n  Durabilidade: %d/%d" % [
+		# 🆕 DETALHES MELHORADOS DA PEÇA
+		var piece_text = """🦾 Braço: %s (%s)
+   %s +%d Ataque Especial
+   %s +%d %s
+   %s +%d %s
+   🔧 Durabilidade: %d/%d""" % [
 			piece.id,
+			piece.get_rarity_name(),
+			get_stat_color_indicator(piece.primary_stat),
 			piece.primary_stat,
+			get_stat_color_indicator(piece.secondary_stat_1),
 			piece.secondary_stat_1,
 			piece.secondary_stat_1_type.capitalize(),
+			get_stat_color_indicator(piece.secondary_stat_2),
 			piece.secondary_stat_2,
 			piece.secondary_stat_2_type.capitalize(),
 			piece.current_durability,
 			piece.max_durability
 		]
+		
+		# Adicionar efeito lendário se existir
+		if piece.rarity == PieceData.Rarity.LENDARIO:
+			var effect = piece.get_legendary_effect()
+			if not effect.is_empty():
+				piece_text += "\n   🌟 " + effect.description
+		
+		return piece_text
 	else:
 		return "Braço: ERRO - peça não encontrada"
 
@@ -204,7 +277,17 @@ func show_piece_selection_panel():
 	else:
 		for piece in available_pieces:
 			var button = Button.new()
-			button.text = "%s (Atq.Esp: +%d)" % [piece.id, piece.primary_stat]
+			
+			# 🆕 VISUAL MELHORADO DAS PEÇAS
+			var piece_text = "%s (%s)\n%s Atq.Esp: +%d" % [
+				piece.id,
+				piece.get_rarity_name(),
+				get_stat_color_indicator(piece.primary_stat),
+				piece.primary_stat
+			]
+			
+			button.text = piece_text
+			button.modulate = piece.get_rarity_color()
 			button.pressed.connect(_on_piece_selected_for_equip.bind(piece))
 			
 			piece_list.add_child(button)
@@ -235,6 +318,19 @@ func equip_piece_to_robot():
 
 func show_equipment_feedback(message: String):
 	print("✅ " + message)
+	
+	# 🆕 FEEDBACK VISUAL NA TELA
+	var feedback_label = Label.new()
+	feedback_label.text = "✅ " + message
+	feedback_label.modulate = Color.GREEN
+	feedback_label.position = Vector2(500, 300)
+	feedback_label.z_index = 100
+	add_child(feedback_label)
+	
+	# Animar e remover após 2 segundos
+	var tween = create_tween()
+	tween.tween_property(feedback_label, "modulate:a", 0.0, 2.0)
+	tween.tween_callback(feedback_label.queue_free)
 
 func _on_back_pressed():
 	get_tree().change_scene_to_file("res://scenes/MainHub.tscn")

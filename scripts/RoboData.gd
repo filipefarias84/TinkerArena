@@ -1,4 +1,4 @@
-# RobotData.gd - Versão Simplificada MVP
+# RobotData.gd - Sistema de Raridades Completo + Modelos Dirigidos
 extends Resource
 class_name RobotData
 
@@ -14,14 +14,21 @@ enum Type {
 	ALUMINIO_SWIFT
 }
 
-enum Rarity { COMUM }  # Apenas Comum para MVP
+# 🆕 SISTEMA DE RARIDADES COMPLETO
+enum Rarity { 
+	COMUM,     # 1.0x ± 5%
+	INCOMUM,   # 1.15x ± 7%
+	RARO,      # 1.35x ± 8%
+	EPICO,     # 1.6x ± 10%
+	LENDARIO   # 2.0x ± 12% + habilidade única
+}
 
 @export var serial_number: String
-@export var type: Type = Type.COBRE_LIGHTNING  # <- CORRIGIDO: usar novo enum
+@export var type: Type = Type.COBRE_LIGHTNING
 @export var rarity: Rarity = Rarity.COMUM
 
-# Stats básicos
-@export var base_attack: int = 70      # <- CORRIGIDO: valores balanceados
+# Stats básicos (ranges base do database)
+@export var base_attack: int = 70
 @export var base_defense: int = 60
 @export var base_special_attack: int = 75
 @export var base_special_defense: int = 55
@@ -36,6 +43,23 @@ enum Rarity { COMUM }  # Apenas Comum para MVP
 # Ciclos de vida
 @export var max_cycles: int = 20
 @export var remaining_cycles: int = 20
+
+# 🆕 MULTIPLICADORES DE RARIDADE
+const RARITY_MULTIPLIERS = {
+	Rarity.COMUM: 1.0,
+	Rarity.INCOMUM: 1.15,
+	Rarity.RARO: 1.35,
+	Rarity.EPICO: 1.6,
+	Rarity.LENDARIO: 2.0
+}
+
+const RARITY_VARIATIONS = {
+	Rarity.COMUM: 0.05,      # ± 5%
+	Rarity.INCOMUM: 0.07,    # ± 7%
+	Rarity.RARO: 0.08,       # ± 8%
+	Rarity.EPICO: 0.10,      # ± 10%
+	Rarity.LENDARIO: 0.12    # ± 12%
+}
 
 func get_element_type() -> String:
 	match type:
@@ -64,7 +88,38 @@ func get_model_display_name() -> String:
 	var model = get_model_type()
 	return "%s %s" % [element, model]
 
+func get_rarity_name() -> String:
+	match rarity:
+		Rarity.COMUM: return "Comum"
+		Rarity.INCOMUM: return "Incomum"
+		Rarity.RARO: return "Raro"
+		Rarity.EPICO: return "Épico"
+		Rarity.LENDARIO: return "Lendário"
+		_: return "Comum"
+
+func get_rarity_color() -> Color:
+	match rarity:
+		Rarity.COMUM: return Color.WHITE
+		Rarity.INCOMUM: return Color.GREEN
+		Rarity.RARO: return Color.BLUE
+		Rarity.EPICO: return Color.PURPLE
+		Rarity.LENDARIO: return Color.GOLD
+		_: return Color.WHITE
+
+# 🆕 APLICAR MULTIPLICADORES DE RARIDADE
+func apply_rarity_multiplier(base_value: int) -> int:
+	var multiplier = RARITY_MULTIPLIERS[rarity]
+	var variation = RARITY_VARIATIONS[rarity]
+	
+	# Aplicar multiplicador + variação aleatória
+	var min_mult = multiplier - variation
+	var max_mult = multiplier + variation
+	var final_multiplier = randf_range(min_mult, max_mult)
+	
+	return int(base_value * final_multiplier)
+
 func get_final_stats() -> Dictionary:
+	# Stats base já com multiplicador aplicado
 	var stats = {
 		"attack": base_attack,
 		"defense": base_defense,
@@ -116,6 +171,33 @@ func normalize_stat_name(stat_type: String) -> String:
 		_:
 			print("⚠️ Stat type não reconhecido: " + stat_type)
 			return "attack"  # fallback
+
+# 🆕 HABILIDADES LENDÁRIAS (para futuro)
+func get_legendary_ability() -> Dictionary:
+	if rarity != Rarity.LENDARIO:
+		return {}
+	
+	match get_model_type():
+		"LIGHTNING":
+			return {
+				"name": "Eco Eterno",
+				"description": "30% chance de +30% dano baseado em dano acumulado",
+				"proc_chance": 0.3
+			}
+		"GUARDIAN":
+			return {
+				"name": "Força Absoluta", 
+				"description": "30% chance de +50% ATK por 3 turnos após kill",
+				"proc_chance": 0.3
+			}
+		"SWIFT":
+			return {
+				"name": "Velocidade Temporal",
+				"description": "30% chance de turno duplo (cooldown 3)",
+				"proc_chance": 0.3
+			}
+		_:
+			return {}
 
 func to_dict() -> Dictionary:
 	return {
