@@ -1,8 +1,12 @@
-# GameManager.gd - Singleton para MVP (CORRIGIDO)
+# GameManager.gd - Singleton para MVP (COMPLETO com seleção de posição)
 extends Node
 
 var current_player: PlayerData
 var data_manager: DataManager
+
+# Propriedades de seleção
+var selected_team: Array[RobotData] = []  # [front_robot, back_robot]
+var selected_position: String = ""        # "FRONT" ou "BACK" para combate 1v2
 
 func _ready():
 	initialize_mvp_systems()
@@ -53,3 +57,9 @@ func create_initial_robot() -> RobotData:
 	
 	print("🤖 Robô inicial criado: COBRE LIGHTNING")
 	return robot
+
+func clear_team_selection():
+	"""Limpa seleção de team e posição"""
+	selected_team.clear()
+	selected_position = ""
+	print("🧹 Seleção de team e posição limpa")

@@ -1,4 +1,4 @@
-# CombatScene.gd - Sistema de combate 2v2 com posicionamento
+# CombatScene.gd - Sistema de combate 2v2 com correção para 1 robô
 extends Control
 
 # Referencias dos elementos UI
@@ -35,6 +35,9 @@ var time_multiplier: float = 100.0
 var combat_log_entries: Array[String] = []
 const MAX_LOG_ENTRIES = 8
 
+# 🆕 VARIÁVEL PARA DETECTAR COMBATE COM 1 ROBÔ
+var is_single_robot_combat: bool = false
+
 func _ready():
 	connect_signals()
 	setup_turn_order_ui()
@@ -52,40 +55,123 @@ func setup_turn_order_ui():
 		turn_order_ui.size = Vector2(1320, 70)
 
 func setup_combat_2v2():
-	# Verificar se há robôs suficientes
+	# 🆕 VERIFICAÇÃO CRÍTICA: Robôs disponíveis
 	var active_robots = GameManager.data_manager.get_active_robots()
-	if active_robots.size() < 2:
-		print("❌ Erro: Precisa de pelo menos 2 robôs para combate 2v2")
-		_on_back_pressed()
+	
+	if active_robots.is_empty():
+		print("❌ ERRO CRÍTICO: Nenhum robô disponível!")
+		show_error_and_return("Nenhum robô disponível para combate!")
 		return
 	
-	# 🆕 CRIAR TEAMS 2v2
+	if active_robots.size() == 1:
+		print("⚠️ MODO 1 ROBÔ: Combate especial ativado")
+		is_single_robot_combat = true
+	
+	# 🆕 CRIAR TEAMS COM TRATAMENTO ESPECIAL
 	create_player_team(active_robots)
 	create_enemy_team()
 	
-	# Inicializar timeline para 4 unidades
+	# Verificar se teams foram criados corretamente
+	if player_team.is_empty() or enemy_team.is_empty():
+		print("❌ ERRO: Teams não criados corretamente!")
+		show_error_and_return("Erro na criação dos teams!")
+		return
+	
+	# Inicializar timeline para unidades disponíveis
 	initialize_timeline_2v2()
 	
-	print("🥊 Combate 2v2 iniciado!")
+	print("🥊 Combate iniciado!")
 	print_team_status()
 	
 	# 🆕 INICIALIZAR LOG DE COMBATE
-	add_log_entry("🥊 Combate 2v2 iniciado!", Color.YELLOW)
-	add_log_entry("⚔️ %s vs %s" % [
-		player_team[0].robot_data.get_model_display_name() if player_team[0].robot_data else "PLAYER",
-		enemy_team[0].robot_data.get_model_display_name() if enemy_team[0].robot_data else "ENEMY"
-	], Color.WHITE)
+	if is_single_robot_combat:
+		add_log_entry("⚠️ Combate com 1 robô - Modo especial!", Color.YELLOW)
+		add_log_entry("🤖 %s (duplicado para frente/trás)" % player_team[0].robot_data.get_model_display_name(), Color.WHITE)
+	else:
+		add_log_entry("🥊 Combate 2v2 iniciado!", Color.YELLOW)
+		add_log_entry("⚔️ %s vs %s" % [
+			player_team[0].robot_data.get_model_display_name() if player_team[0].robot_data else "PLAYER",
+			enemy_team[0].robot_data.get_model_display_name() if enemy_team[0].robot_data else "ENEMY"
+		], Color.WHITE)
 	
 	update_ui_2v2()
 	update_turn_order_display()
 	process_next_action()
 
-func create_player_team(available_robots: Array[RobotData]):
-	# Usar os 2 primeiros robôs disponíveis
-	# TODO: Implementar seleção de team na FASE 2.3
+func show_error_and_return(error_message: String):
+	"""Mostra erro e retorna ao MainHub"""
+	turn_label.text = "❌ ERRO: " + error_message
+	turn_label.modulate = Color.RED
 	
-	var front_robot = available_robots[0]
-	var back_robot = available_robots[1] if available_robots.size() > 1 else available_robots[0]
+	add_log_entry("❌ ERRO: " + error_message, Color.RED)
+	add_log_entry("🏠 Retornando ao hub em 3 segundos...", Color.YELLOW)
+	
+	# Desabilitar todos os botões
+	disable_all_buttons()
+	
+	# Aguardar e voltar
+	await get_tree().create_timer(3.0).timeout
+	_on_back_pressed()
+
+func disable_all_buttons():
+	"""Desabilita todos os botões de ação"""
+	attack_button.disabled = true
+	special_button.disabled = true
+	switch_button.disabled = true
+	attack_button.modulate = Color.GRAY
+	special_button.modulate = Color.GRAY
+	switch_button.modulate = Color.GRAY
+
+func create_player_team(available_robots: Array[RobotData]):
+	# 🆕 SISTEMA DE POSIÇÃO ESCOLHIDA PELO JOGADOR
+	var selected_robots: Array[RobotData] = []
+	var is_single_robot_combat = false
+	
+	if GameManager.selected_team.size() >= 2 and GameManager.selected_position == "":
+		# Combate 2v2 normal - usar seleção do jogador
+		selected_robots = GameManager.selected_team
+		print("👥 Usando team 2v2 selecionado pelo jogador")
+		
+	elif GameManager.selected_team.size() >= 1 and GameManager.selected_position != "":
+		# 🆕 COMBATE 1v2 COM POSIÇÃO ESCOLHIDA
+		var single_robot = GameManager.selected_team[0]
+		is_single_robot_combat = true
+		
+		if GameManager.selected_position == "FRONT":
+			# Robô principal na frente, placeholder atrás
+			selected_robots = [single_robot, create_placeholder_robot()]
+			print("🛡️ Combate 1v2: Robô principal na FRONT")
+		else:  # "BACK"
+			# Placeholder na frente, robô principal atrás
+			selected_robots = [create_placeholder_robot(), single_robot]
+			print("⚔️ Combate 1v2: Robô principal na BACK")
+			
+	else:
+		# Fallback: usar robôs disponíveis
+		if available_robots.size() >= 2:
+			selected_robots = available_robots.slice(0, 2)
+			print("🔄 Fallback: usando primeiros 2 robôs disponíveis")
+		elif available_robots.size() == 1:
+			# Emergência: duplicar robô único
+			selected_robots = [available_robots[0], available_robots[0]]
+			is_single_robot_combat = true
+			print("🚨 Fallback emergência: duplicando único robô")
+		else:
+			print("❌ ERRO: Nenhum robô para criar team!")
+			return
+	
+	# 🆕 VERIFICAÇÃO DE SEGURANÇA
+	if selected_robots.size() != 2:
+		print("❌ ERRO: selected_robots não tem exatamente 2 elementos!")
+		return
+	
+	# Criar units com robôs selecionados
+	var front_robot = selected_robots[0]
+	var back_robot = selected_robots[1]
+	
+	if not front_robot or not back_robot:
+		print("❌ ERRO: Robôs nulos detectados!")
+		return
 	
 	var front_unit = CombatUnit.new(front_robot)
 	front_unit.current_position = CombatUnit.Position.FRONT
@@ -93,11 +179,45 @@ func create_player_team(available_robots: Array[RobotData]):
 	var back_unit = CombatUnit.new(back_robot)
 	back_unit.current_position = CombatUnit.Position.BACK
 	
-	# 🆕 APLICAR MODIFICADORES POSICIONAIS
+	# 🆕 MARCAR UNIDADE PLACEHOLDER (para não consumir ciclos)
+	if is_single_robot_combat:
+		if GameManager.selected_position == "FRONT":
+			back_unit.is_placeholder = true
+		else:
+			front_unit.is_placeholder = true
+	
+	# Aplicar modificadores posicionais
 	apply_positional_modifiers(front_unit)
 	apply_positional_modifiers(back_unit)
 	
 	player_team = [front_unit, back_unit]
+	
+	print("✅ Team criado:")
+	print("  Front: %s%s" % [front_unit.robot_data.get_model_display_name(), " (Placeholder)" if front_unit.get("is_placeholder", false) else ""])
+	print("  Back: %s%s" % [back_unit.robot_data.get_model_display_name(), " (Placeholder)" if back_unit.get("is_placeholder", false) else ""])
+	
+	# Limpar seleção após uso
+	GameManager.clear_team_selection()
+
+func create_placeholder_robot() -> RobotData:
+	"""Cria um robô placeholder para combate 1v2"""
+	var robot = RobotData.new()
+	robot.serial_number = "PLACEHOLDER-WEAK-001"
+	robot.type = RobotData.Type.COBRE_LIGHTNING
+	robot.rarity = RobotData.Rarity.COMUM
+	
+	# Stats muito baixos para placeholder
+	robot.base_attack = 10
+	robot.base_defense = 10
+	robot.base_special_attack = 10
+	robot.base_special_defense = 10
+	robot.base_health = 20  # HP muito baixo - morre rápido
+	robot.base_speed = 1    # Muito lento
+	
+	robot.remaining_cycles = 1
+	robot.max_cycles = 1
+	
+	return robot
 
 func create_enemy_team():
 	# Criar 2 inimigos balanceados
@@ -207,17 +327,22 @@ func initialize_timeline_2v2():
 	timeline_units.clear()
 	current_time = 0.0
 	
-	# Adicionar todas as 4 unidades na timeline
+	# Adicionar todas as unidades na timeline
 	var all_units = player_team + enemy_team
 	
-	for unit in all_units:
-		var action_delay = time_multiplier / float(unit.get_speed_stat())
-		timeline_units.append({
-			"unit": unit,
-			"next_action_time": action_delay
-		})
+	if all_units.is_empty():
+		print("❌ ERRO: Nenhuma unidade para timeline!")
+		return
 	
-	print("⏰ Timeline 2v2 inicializada com %d unidades" % timeline_units.size())
+	for unit in all_units:
+		if unit and unit.robot_data:
+			var action_delay = time_multiplier / float(unit.get_speed_stat())
+			timeline_units.append({
+				"unit": unit,
+				"next_action_time": action_delay
+			})
+	
+	print("⏰ Timeline inicializada com %d unidades" % timeline_units.size())
 
 func process_next_action():
 	if combat_ended:
@@ -225,6 +350,7 @@ func process_next_action():
 	
 	var next_unit_data = get_next_acting_unit()
 	if not next_unit_data:
+		print("❌ ERRO: Nenhuma unidade para processar!")
 		return
 	
 	current_acting_unit = next_unit_data.unit
@@ -292,6 +418,130 @@ func _on_special_pressed():
 	if not is_player_turn or combat_ended or not current_acting_unit.can_use_special_attack():
 		return
 	execute_player_action(CombatUnit.AttackType.SPECIAL)
+
+# 🆕 SISTEMA DE TROCA DE POSIÇÕES COM VERIFICAÇÃO ESPECIAL
+func _on_switch_pressed():
+	if not is_player_turn or combat_ended:
+		return
+	
+	# 🆕 BLOQUEAR TROCA NO MODO 1 ROBÔ
+	if is_single_robot_combat:
+		print("⚠️ Troca de posições bloqueada no modo 1 robô")
+		add_log_entry("⚠️ Troca impossível: mesmo robô duplicado", Color.YELLOW)
+		return
+	
+	# Validar se é possível trocar posições
+	if not can_switch_positions():
+		return
+	
+	execute_position_switch()
+
+func can_switch_positions() -> bool:
+	"""Verifica se é possível trocar posições no time do player"""
+	
+	# 🆕 VERIFICAÇÃO ESPECIAL PARA 1 ROBÔ
+	if is_single_robot_combat:
+		return false
+	
+	# Verificar se ambos os robôs estão vivos
+	var front_alive = player_team[0] and player_team[0].is_alive()
+	var back_alive = player_team[1] and player_team[1].is_alive()
+	
+	if not front_alive or not back_alive:
+		print("❌ Não é possível trocar posições: robô morto!")
+		add_log_entry("❌ Troca impossível: robô derrotado", Color.RED)
+		return false
+	
+	# Verificar se é o turno de uma unidade do player
+	if not (current_acting_unit in player_team):
+		print("❌ Não é turno do player!")
+		return false
+	
+	return true
+
+func execute_position_switch():
+	"""Executa a troca de posições consumindo o turno inteiro"""
+	
+	print("\n=== TROCA DE POSIÇÕES ===")
+	
+	# Remover modificadores atuais
+	remove_positional_modifiers(player_team[0])
+	remove_positional_modifiers(player_team[1])
+	
+	# Trocar posições
+	player_team[0].current_position = CombatUnit.Position.BACK
+	player_team[1].current_position = CombatUnit.Position.FRONT
+	
+	# Trocar posições no array (front sempre index 0)
+	var temp = player_team[0]
+	player_team[0] = player_team[1]
+	player_team[1] = temp
+	
+	# Aplicar novos modificadores
+	apply_positional_modifiers(player_team[0])  # Novo front
+	apply_positional_modifiers(player_team[1])  # Novo back
+	
+	# Recalcular HP se necessário
+	recalculate_hp_after_position_change()
+	
+	# Log da ação
+	var switcher_name = current_acting_unit.robot_data.get_model_display_name() if current_acting_unit.robot_data else "VOCÊ"
+	print("🔄 %s trocou as posições do time!" % switcher_name)
+	add_log_entry("🔄 %s trocou posições da equipe" % switcher_name, Color.YELLOW)
+	add_log_entry("  Front: %s → Back: %s" % [
+		player_team[1].robot_data.get_model_display_name() if player_team[1].robot_data else "ROBÔ",
+		player_team[0].robot_data.get_model_display_name() if player_team[0].robot_data else "ROBÔ"
+	], Color.GRAY)
+	
+	# Agendar próxima ação (turno foi consumido)
+	schedule_next_action(current_acting_unit)
+	
+	# Continuar combate
+	process_next_action()
+
+func remove_positional_modifiers(unit: CombatUnit):
+	"""Remove modificadores posicionais de uma unidade"""
+	if not unit.robot_data:
+		return
+	
+	# Reverter modificadores baseado na posição atual
+	match unit.current_position:
+		CombatUnit.Position.FRONT:
+			# Reverter +10% nas defesas
+			unit.robot_data.base_defense = int(unit.robot_data.base_defense / 1.1)
+			unit.robot_data.base_special_defense = int(unit.robot_data.base_special_defense / 1.1)
+			unit.robot_data.base_health = int(unit.robot_data.base_health / 1.1)
+			
+		CombatUnit.Position.BACK:
+			# Reverter +10% nos ataques
+			unit.robot_data.base_attack = int(unit.robot_data.base_attack / 1.1)
+			unit.robot_data.base_special_attack = int(unit.robot_data.base_special_attack / 1.1)
+
+func recalculate_hp_after_position_change():
+	"""Recalcula HP das unidades após mudança de posição"""
+	
+	# Recalcular HP do novo front (pode ter ganhado bônus de vida)
+	var new_front = player_team[0]
+	if new_front.robot_data:
+		var new_stats = new_front.robot_data.get_final_stats()
+		var hp_percentage = float(new_front.current_hp) / float(new_front.max_hp)
+		
+		# Aplicar mesma porcentagem de HP no novo máximo
+		new_front.max_hp = new_stats.health
+		new_front.current_hp = int(new_front.max_hp * hp_percentage)
+		
+		print("  🩹 Novo Front: HP ajustado para %d/%d" % [new_front.current_hp, new_front.max_hp])
+	
+	# Recalcular HP do novo back
+	var new_back = player_team[1]
+	if new_back.robot_data:
+		var new_stats = new_back.robot_data.get_final_stats()
+		var hp_percentage = float(new_back.current_hp) / float(new_back.max_hp)
+		
+		new_back.max_hp = new_stats.health
+		new_back.current_hp = int(new_back.max_hp * hp_percentage)
+		
+		print("  🩹 Novo Back: HP ajustado para %d/%d" % [new_back.current_hp, new_back.max_hp])
 
 # 🆕 SISTEMA DE LOG DE COMBATE
 func add_log_entry(text: String, color: Color = Color.WHITE):
@@ -377,10 +627,6 @@ func show_death_animation(dying_unit: CombatUnit):
 	var tween = create_tween()
 	tween.tween_property(target_label, "modulate:a", 0.5, 0.5)
 	await tween.finished
-
-func _on_switch_pressed():
-	# TODO: Implementar troca de posições na FASE 2.4
-	print("🔄 Sistema de troca de posições será implementado na FASE 2.4")
 
 func execute_player_action(attack_type: CombatUnit.AttackType):
 	print("\n=== AÇÃO DO PLAYER ===")
@@ -512,7 +758,7 @@ func end_combat(player_won: bool):
 		print("🏆 PLAYER TEAM VENCEU!")
 		add_log_entry("🏆 VITÓRIA! Time inimigo derrotado!", Color.GREEN)
 		
-		var reward_sucata = 50  # Maior recompensa para 2v2
+		var reward_sucata = 50
 		GameManager.current_player.sucata += reward_sucata
 		print("💰 Recompensa: +%d sucata" % reward_sucata)
 		add_log_entry("💰 Recompensa: +%d sucata" % reward_sucata, Color.YELLOW)
@@ -521,19 +767,21 @@ func end_combat(player_won: bool):
 		print("💀 PLAYER TEAM PERDEU!")
 		add_log_entry("💀 DERROTA! Seu time foi destruído!", Color.RED)
 	
-	# Reduzir ciclos de robôs usados
+	# 🆕 REDUZIR CICLOS APENAS DE ROBÔS REAIS (NÃO PLACEHOLDERS)
 	for unit in player_team:
-		if unit.robot_data:
+		if unit.robot_data and not unit.get("is_placeholder", false):
 			unit.robot_data.remaining_cycles -= 1
 			print("🔄 %s - Ciclos restantes: %d" % [unit.robot_data.serial_number, unit.robot_data.remaining_cycles])
 			add_log_entry("🔄 %s perdeu 1 ciclo" % unit.robot_data.get_model_display_name(), Color.GRAY)
+		elif unit.get("is_placeholder", false):
+			print("👻 Placeholder não consome ciclo")
 	
 	GameManager.data_manager.save_game()
 	
 	await get_tree().create_timer(3.0).timeout
 	_on_back_pressed()
 
-# 🆕 UI ATUALIZADA PARA 2v2
+# 🆕 UI ATUALIZADA PARA 2v2 COM PROTEÇÕES
 func update_ui_2v2():
 	if combat_ended:
 		return
@@ -543,10 +791,11 @@ func update_ui_2v2():
 	
 	# Atualizar indicador de turno
 	if is_player_turn and current_acting_unit and current_acting_unit.robot_data:
-		turn_label.text = "🎯 SEU TURNO - %s (%s)" % [
-			current_acting_unit.robot_data.get_model_display_name(),
-			"FRONT" if current_acting_unit.current_position == CombatUnit.Position.FRONT else "BACK"
-		]
+		var position_text = "FRONT" if current_acting_unit.current_position == CombatUnit.Position.FRONT else "BACK"
+		if is_single_robot_combat:
+			turn_label.text = "🎯 SEU TURNO - %s (%s - Duplicado)" % [current_acting_unit.robot_data.get_model_display_name(), position_text]
+		else:
+			turn_label.text = "🎯 SEU TURNO - %s (%s)" % [current_acting_unit.robot_data.get_model_display_name(), position_text]
 		turn_label.modulate = Color.CYAN
 	elif current_acting_unit and current_acting_unit.robot_data:
 		turn_label.text = "⏳ TURNO INIMIGO - %s" % current_acting_unit.robot_data.get_model_display_name()
@@ -556,13 +805,17 @@ func update_ui_2v2():
 		turn_label.modulate = Color.GRAY
 	
 	update_special_button_status()
+	update_switch_button_status()
 
 func update_team_labels():
 	# Player team - verificar se existem e estão vivos
 	if player_team.size() > 0 and player_team[0] and player_team[0].is_alive() and player_team[0].robot_data:
 		var hp_status = get_hp_status_icon(player_team[0])
+		var robot_name = player_team[0].robot_data.get_model_display_name()
+		if is_single_robot_combat:
+			robot_name += " (Dup)"
 		player_front_label.text = "🛡️ FRONT: %s\n%s %d/%d HP" % [
-			player_team[0].robot_data.get_model_display_name(),
+			robot_name,
 			hp_status,
 			player_team[0].current_hp,
 			player_team[0].max_hp
@@ -574,8 +827,11 @@ func update_team_labels():
 	
 	if player_team.size() > 1 and player_team[1] and player_team[1].is_alive() and player_team[1].robot_data:
 		var hp_status = get_hp_status_icon(player_team[1])
+		var robot_name = player_team[1].robot_data.get_model_display_name()
+		if is_single_robot_combat:
+			robot_name += " (Dup)"
 		player_back_label.text = "⚔️ BACK: %s\n%s %d/%d HP" % [
-			player_team[1].robot_data.get_model_display_name(),
+			robot_name,
 			hp_status,
 			player_team[1].current_hp,
 			player_team[1].max_hp
@@ -640,12 +896,41 @@ func update_special_button_status():
 		special_button.disabled = false
 		special_button.modulate = Color.WHITE
 
+# 🆕 ATUALIZAR STATUS DO BOTÃO DE TROCA COM PROTEÇÃO
+func update_switch_button_status():
+	"""Atualiza o status do botão de troca baseado nas condições atuais"""
+	
+	if not is_player_turn or combat_ended:
+		switch_button.disabled = true
+		switch_button.modulate = Color.GRAY
+		switch_button.text = "🔄 Trocar Posição"
+		return
+	
+	# 🆕 VERIFICAÇÃO ESPECIAL PARA 1 ROBÔ
+	if is_single_robot_combat:
+		switch_button.disabled = true
+		switch_button.modulate = Color.GRAY
+		switch_button.text = "❌ Mesmo Robô"
+		return
+	
+	# Verificar se ambos os robôs estão vivos
+	var front_alive = player_team[0] and player_team[0].is_alive()
+	var back_alive = player_team[1] and player_team[1].is_alive()
+	
+	if front_alive and back_alive:
+		switch_button.disabled = false
+		switch_button.modulate = Color.WHITE
+		switch_button.text = "🔄 Trocar Posição"
+	else:
+		switch_button.disabled = true
+		switch_button.modulate = Color.GRAY
+		switch_button.text = "❌ Robô Morto"
+
 func enable_player_buttons():
 	attack_button.disabled = false
 	attack_button.modulate = Color.WHITE
-	switch_button.disabled = false
-	switch_button.modulate = Color.WHITE
 	update_special_button_status()
+	update_switch_button_status()
 
 func disable_player_buttons():
 	disable_action_buttons()

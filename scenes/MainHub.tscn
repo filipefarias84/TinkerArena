@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://cpaqel1cp43mu"]
+[gd_scene load_steps=3 format=3 uid="uid://cpaqel1cp43mu"]
 
 [ext_resource type="Script" uid="uid://bww1ojda1hb7p" path="res://scripts/MainHub.gd" id="1_psyej"]
+[ext_resource type="Texture2D" uid="uid://dhe3w5g1orqgn" path="res://assets/tinker_arena_background.jpg" id="2_bg"]
 
 [node name="MainHub" type="Control"]
 layout_mode = 3
@@ -11,6 +12,17 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_psyej")
 
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_bg")
+expand_mode = 1
+stretch_mode = 5
+
 [node name="Header" type="Control" parent="."]
 layout_mode = 1
 anchors_preset = 10
@@ -20,67 +32,48 @@ grow_horizontal = 2
 
 [node name="SucataLabel" type="Label" parent="Header"]
 layout_mode = 0
-offset_left = 50.0
-offset_top = 25.0
-offset_right = 90.0
-offset_bottom = 48.0
-text = "Sucata: 0"
+offset_left = 164.0
+offset_top = 14.0
+offset_right = 414.0
+offset_bottom = 44.0
+text = "⚙️ Sucata: 0"
 
-[node name="Center" type="Control" parent="."]
-layout_mode = 1
-anchor_top = 0.08
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_bottom = -73.6
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="FundicaoButton" type="Button" parent="Center"]
+[node name="FundicaoButton" type="Button" parent="."]
 layout_mode = 0
-offset_left = 400.0
-offset_top = 200.0
-offset_right = 700.0
-offset_bottom = 300.0
-text = "Fundição"
+offset_left = 92.0
+offset_top = 415.0
+offset_right = 440.0
+offset_bottom = 485.0
+text = "🏭 FUNDIÇÃO"
 
-[node name="ArsenalButton" type="Button" parent="Center"]
+[node name="OficinaButton" type="Button" parent="."]
 layout_mode = 0
-offset_left = 800.0
-offset_top = 200.0
-offset_right = 1100.0
-offset_bottom = 300.0
-text = "Arsenal"
+offset_left = 756.0
+offset_top = 685.0
+offset_right = 1041.0
+offset_bottom = 755.0
+text = "🔧 OFICINA"
 
-[node name="OficinaButton" type="Button" parent="Center"]
+[node name="ArsenalButton" type="Button" parent="."]
 layout_mode = 0
-offset_left = 600.0
-offset_top = 350.0
-offset_right = 900.0
-offset_bottom = 450.0
-text = "Oficina"
+offset_left = 1358.0
+offset_top = 410.0
+offset_right = 1659.0
+offset_bottom = 487.0
+text = "⚙️ ARSENAL"
 
-[node name="BancadaButton" type="Button" parent="Center"]
+[node name="BancadaButton" type="Button" parent="."]
 layout_mode = 0
-offset_left = 1200.0
-offset_top = 200.0
-offset_right = 1500.0
-offset_bottom = 300.0
-text = "Bancada"
+offset_left = 83.0
+offset_top = 890.0
+offset_right = 502.0
+offset_bottom = 960.0
+text = "🛠️ BANCADA"
 
-[node name="CombatButton" type="Button" parent="Center"]
+[node name="CombatButton" type="Button" parent="."]
 layout_mode = 0
-offset_left = 600.0
-offset_top = 500.0
-offset_right = 900.0
-offset_bottom = 580.0
-text = "COMBATE TESTE"
-
-[node name="Bottom" type="Control" parent="."]
-layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = -80.0
-grow_horizontal = 2
-grow_vertical = 0
+offset_left = 1271.0
+offset_top = 911.0
+offset_right = 1671.0
+offset_bottom = 981.0
+text = "⚔️ COMBATE 2v2"

@@ -1,0 +1,148 @@
+[gd_scene load_steps=2 format=3 uid="uid://6gf6kdtmp1o5"]
+
+[ext_resource type="Script" uid="uid://byyecx6km0td2" path="res://scripts/TeamSelection.gd" id="1_team"]
+
+[node name="TeamSelection" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_team")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.1, 0.08, 0.06, 1)
+
+[node name="Header" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 100.0
+grow_horizontal = 2
+
+[node name="TitleLabel" type="Label" parent="Header"]
+layout_mode = 0
+offset_left = 660.0
+offset_top = 20.0
+offset_right = 1260.0
+offset_bottom = 70.0
+text = "⚔️ SELEÇÃO DE TEAM 2v2"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BackButton" type="Button" parent="Header"]
+layout_mode = 0
+offset_left = 50.0
+offset_top = 25.0
+offset_right = 200.0
+offset_bottom = 65.0
+text = "🏠 Voltar"
+
+[node name="RobotList" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 0
+offset_left = 50.0
+offset_top = 120.0
+offset_right = 850.0
+offset_bottom = 900.0
+
+[node name="ScrollContainer" type="ScrollContainer" parent="RobotList"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="RobotList/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TeamPreview" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 0
+offset_left = 900.0
+offset_top = 120.0
+offset_right = 1600.0
+offset_bottom = 950.0
+
+[node name="FrontSlot" type="Control" parent="TeamPreview"]
+anchors_preset = 0
+offset_left = 50.0
+offset_top = 50.0
+offset_right = 650.0
+offset_bottom = 420.0
+
+[node name="FrontPanel" type="Panel" parent="TeamPreview/FrontSlot"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="FrontLabel" type="Label" parent="TeamPreview/FrontSlot"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 10.0
+offset_right = 580.0
+offset_bottom = 40.0
+text = "🛡️ POSIÇÃO FRONT (TANQUE)"
+
+[node name="FrontRobotInfo" type="Label" parent="TeamPreview/FrontSlot"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 50.0
+offset_right = 580.0
+offset_bottom = 350.0
+text = "Selecione um robô..."
+autowrap_mode = 3
+
+[node name="BackSlot" type="Control" parent="TeamPreview"]
+anchors_preset = 0
+offset_left = 50.0
+offset_top = 440.0
+offset_right = 650.0
+offset_bottom = 810.0
+
+[node name="BackPanel" type="Panel" parent="TeamPreview/BackSlot"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="BackLabel" type="Label" parent="TeamPreview/BackSlot"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 10.0
+offset_right = 580.0
+offset_bottom = 40.0
+text = "⚔️ POSIÇÃO BACK (DPS)"
+
+[node name="BackRobotInfo" type="Label" parent="TeamPreview/BackSlot"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 50.0
+offset_right = 580.0
+offset_bottom = 350.0
+text = "Selecione um robô..."
+autowrap_mode = 3
+
+[node name="StartCombatButton" type="Button" parent="."]
+layout_mode = 0
+offset_left = 1650.0
+offset_top = 120.0
+offset_right = 1850.0
+offset_bottom = 200.0
+disabled = true
+text = "🥊 INICIAR COMBATE"

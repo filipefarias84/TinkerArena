@@ -1,0 +1,75 @@
+[gd_scene load_steps=2 format=3 uid="uid://bfqunrbd8ajop"]
+
+[ext_resource type="Script" uid="uid://c4vo7o3fyo6sk" path="res://scripts/SingleRobotModal.gd" id="1_jb5bo"]
+
+[node name="SingleRobotModal" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_jb5bo")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.7)
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 0
+offset_left = 560.0
+offset_top = 225.0
+offset_right = 1360.0
+offset_bottom = 740.0
+
+[node name="Title" type="Label" parent="Panel"]
+layout_mode = 0
+offset_left = 50.0
+offset_top = 20.0
+offset_right = 750.0
+offset_bottom = 60.0
+text = "⚠️ APENAS 1 ROBÔ DISPONÍVEL"
+horizontal_alignment = 1
+
+[node name="Message" type="Label" parent="Panel"]
+layout_mode = 0
+offset_left = 50.0
+offset_top = 80.0
+offset_right = 750.0
+offset_bottom = 200.0
+text = "Você possui apenas 1 robô ativo para combate.
+Escolha uma das opções abaixo:
+
+🤖 LUTAR: Combate 1v2 (você escolhe posição Front ou Back)
+🏭 CRIAR: Ir para Fundição fabricar outro robô  
+🏠 CANCELAR: Voltar para tela inicial"
+autowrap_mode = 3
+
+[node name="FightButton" type="Button" parent="Panel"]
+layout_mode = 0
+offset_left = 50.0
+offset_top = 267.0
+offset_right = 750.0
+offset_bottom = 317.0
+text = "🤖 LUTAR COM 1 ROBÔ (Escolher Posição)"
+
+[node name="ForgeButton" type="Button" parent="Panel"]
+layout_mode = 0
+offset_left = 50.0
+offset_top = 337.0
+offset_right = 750.0
+offset_bottom = 387.0
+text = "🏭 IR PARA FUNDIÇÃO (Criar Robô)"
+
+[node name="CancelButton" type="Button" parent="Panel"]
+layout_mode = 0
+offset_left = 50.0
+offset_top = 407.0
+offset_right = 750.0
+offset_bottom = 457.0
+text = "🏠 CANCELAR (Voltar ao Hub)"
